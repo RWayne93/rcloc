@@ -44,10 +44,14 @@ fn process_file(path: &std::path::Path) -> FileStats {
                 } else if line.starts_with("#") {
                     stats.comment_lines += 1;
                 } else if line.starts_with("def ") || line.starts_with("class ") {
-                    stats.code_lines += 1; // Count the definition line as code
+                    stats.code_lines += 1; 
                     potential_docstring = true;
                 } else if line.contains("\"\"\"") || line.contains("'''") {
-                    if line.contains("=") && (line.find("\"\"\"").unwrap_or_else(|| usize::MAX) > line.find("=").unwrap_or(0) || line.find("'''").unwrap_or_else(|| usize::MAX) > line.find("=").unwrap_or(0)) {
+                    if line.contains("=") 
+                    && (
+                        line.find("\"\"\"").unwrap_or_else(|| usize::MAX) > line.find("=").unwrap_or(0) 
+                        || line.find("'''").unwrap_or_else(|| usize::MAX) > line.find("=").unwrap_or(0)
+                    ) {
                         // It's a multiline string used as code, not a comment
                         stats.code_lines += 1;
                         state = ParseState::MultiLineComment;
@@ -89,6 +93,19 @@ fn process_file(path: &std::path::Path) -> FileStats {
     stats
 }
 
+fn print_stats(stats: &LanguageStats) {
+    println!("------------------------------------------------------------");
+    println!("{:<12} {:>8} {:>12} {:>12} {:>12}", "Language", "files", "blank", "comment", "code");
+    println!("------------------------------------------------------------");
+    println!("{:<12} {:>8} {:>12} {:>12} {:>12}", "Python", stats.files, stats.blank_lines, stats.comment_lines, stats.code_lines);
+    println!("------------------------------------------------------------");
+
+    let total = stats.blank_lines + stats.comment_lines + stats.code_lines;
+    println!("{:<12} {:>8} {:>12} {:>12} {:>12}", "SUM:", "", "", "", total);
+    println!("------------------------------------------------------------");
+
+}
+
 fn main() {
     let matches = App::new("Rust Line Counter")
         .version("1.0")
@@ -120,19 +137,6 @@ fn main() {
     });
 
     print_stats(&total_stats);
-}
-
-fn print_stats(stats: &LanguageStats) {
-    println!("------------------------------------------------------------");
-    println!("{:<12} {:>8} {:>12} {:>12} {:>12}", "Language", "files", "blank", "comment", "code");
-    println!("------------------------------------------------------------");
-    println!("{:<12} {:>8} {:>12} {:>12} {:>12}", "Python", stats.files, stats.blank_lines, stats.comment_lines, stats.code_lines);
-    println!("------------------------------------------------------------");
-
-    let total = stats.blank_lines + stats.comment_lines + stats.code_lines;
-    println!("{:<12} {:>8} {:>12} {:>12} {:>12}", "SUM:", "", "", "", total);
-    println!("------------------------------------------------------------");
-
 }
 
 #[cfg(test)]
