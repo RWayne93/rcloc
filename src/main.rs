@@ -32,40 +32,57 @@ fn process_file(path: &std::path::Path) -> FileStats {
     };
     let mut stats = FileStats::default();
     let mut state = ParseState::Code;
-    let mut in_string_assignment = false;
+    let mut potential_docstring = false;
 
     for line in io::BufReader::new(file).lines() {
-        let line = if let Ok(line) = line { line } else { continue };
+        let line = if let Ok(line) = line { line.trim().to_string() } else { continue };
 
         match state {
             ParseState::Code => {
-                if line.trim().is_empty() {
+                if line.is_empty() {
                     stats.blank_lines += 1;
-                } else if line.trim_start().starts_with("#") {
+                } else if line.starts_with("#") {
                     stats.comment_lines += 1;
+                } else if line.starts_with("def ") || line.starts_with("class ") {
+                    stats.code_lines += 1; // Count the definition line as code
+                    potential_docstring = true;
                 } else if line.contains("\"\"\"") || line.contains("'''") {
-                    in_string_assignment = line.split('=').next().unwrap().contains("\"\"\"") || line.split('=').next().unwrap().contains("'''");
-                    if !in_string_assignment {
-                        stats.comment_lines += 1;  // Count as a comment if not in an assignment
+                    if line.contains("=") && (line.find("\"\"\"").unwrap_or_else(|| usize::MAX) > line.find("=").unwrap_or(0) || line.find("'''").unwrap_or_else(|| usize::MAX) > line.find("=").unwrap_or(0)) {
+                        // It's a multiline string used as code, not a comment
+                        stats.code_lines += 1;
+                        state = ParseState::MultiLineComment;
+                        potential_docstring = false; // It's not a docstring
+                    } else {
+                        // It's a docstring or a comment
+                        stats.comment_lines += 1;
+                        state = ParseState::MultiLineComment;
                     }
-                    state = ParseState::MultiLineComment;
-                    stats.code_lines += 1;  // Count the line as code since it's part of an assignment or a standalone string
                 } else {
                     stats.code_lines += 1;
+                    potential_docstring = false;
                 }
             }
             ParseState::MultiLineComment => {
-                if (line.contains("\"\"\"") || line.contains("'''")) && !in_string_assignment {
-                    state = ParseState::Code;
-                }
-                if state == ParseState::MultiLineComment {
-                    if in_string_assignment {
-                        stats.code_lines += 1;
+                if line.contains("\"\"\"") || line.contains("'''") {
+                    if potential_docstring {
+                        // Ending a docstring
+                        stats.comment_lines += 1;
                     } else {
-                        stats.comment_lines += 1;  // Count as a comment if it's a docstring
+                        // Ending a multiline string used as code
+                        stats.code_lines += 1;
+                    }
+                    state = ParseState::Code;
+                    potential_docstring = false;
+                } else {
+                    if potential_docstring {
+                        // Inside a docstring
+                        stats.comment_lines += 1;
+                    } else {
+                        // Inside a multiline string used as code
+                        stats.code_lines += 1;
                     }
                 }
-            }
+            },
         }
     }
 
