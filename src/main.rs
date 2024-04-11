@@ -135,3 +135,18 @@ fn print_stats(stats: &LanguageStats) {
 
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_process_file() {
+        // Adjust the path to where your test.py file is located
+        let path = std::path::Path::new("/home/archie/rcloc/tests/python/test.py");
+        let stats = process_file(path);
+
+        assert_eq!(stats.blank_lines, 2, "Blank lines count should be 2");
+        assert_eq!(stats.comment_lines, 6, "Comment lines count should be 6");
+        assert_eq!(stats.code_lines, 7, "Code lines count should be 7");
+    }
+}
