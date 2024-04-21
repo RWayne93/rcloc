@@ -1,29 +1,11 @@
+mod types;
 use clap::{App, Arg};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 use std::fs::File;
 use std::io::{self, BufRead};
 
-#[derive(Debug, Default, Clone)]
-struct FileStats {
-    blank_lines: usize,
-    comment_lines: usize,
-    code_lines: usize,
-}
-
-#[derive(Debug, Default, Clone)]
-struct LanguageStats {
-    files: usize,
-    blank_lines: usize,
-    comment_lines: usize,
-    code_lines: usize,
-}
-
-#[derive(PartialEq)]
-enum ParseState {
-    Code,
-    MultiLineComment,
-}
+use types::{FileStats, LanguageStats, ParseState};
 
 fn process_file(path: &std::path::Path) -> FileStats {
     let file = match File::open(path) {
@@ -146,7 +128,7 @@ mod tests {
     #[test]
     fn test_process_file() {
         // Adjust the path to where your test.py file is located
-        let path = std::path::Path::new("/home/archie/rcloc/tests/python/test.py");
+        let path = std::path::Path::new("./tests/python/test.py");
         let stats = process_file(path);
 
         assert_eq!(stats.blank_lines, 2, "Blank lines count should be 2");
