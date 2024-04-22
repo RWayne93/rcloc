@@ -13,3 +13,7 @@ multiline_string = """
 This is a multiline string.
 It can span multiple lines.
 """
+
+'''
+This is a multiline comment.
+'''

@@ -50,8 +50,8 @@ mod tests {
         let path = std::path::Path::new("./tests/python/test.py");
         let stats = process::process_file(path);
 
-        assert_eq!(stats.blank_lines, 2, "Blank lines count should be 2");
-        assert_eq!(stats.comment_lines, 6, "Comment lines count should be 6");
+        assert_eq!(stats.blank_lines, 3, "Blank lines count should be 3");
+        assert_eq!(stats.comment_lines, 9, "Comment lines count should be 9");
         assert_eq!(stats.code_lines, 7, "Code lines count should be 7");
     }
 }
