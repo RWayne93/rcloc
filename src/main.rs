@@ -6,6 +6,7 @@ use rayon::prelude::*;
 use walkdir::WalkDir;
 
 use types::LanguageStats;
+use process::LanguageRules;
 
 fn main() {
     let matches = App::new("Rust Line Counter")
@@ -18,7 +19,8 @@ fn main() {
         .get_matches();
 
     let directory = matches.value_of("DIRECTORY").unwrap();
-
+    let python_rules = LanguageRules::for_python();
+    
     let paths: Vec<_> = WalkDir::new(directory)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -26,7 +28,7 @@ fn main() {
         .collect();
 
     let stats: Vec<_> = paths.par_iter()
-        .map(|path| process::process_file(path.path()))
+        .map(|path| process::process_file(path.path(), &python_rules))
         .collect();
 
     let total_stats = stats.iter().fold(LanguageStats::default(), |mut acc, stat| {
@@ -48,7 +50,8 @@ mod tests {
     fn test_process_file() {
         // Adjust the path to where your test.py file is located
         let path = std::path::Path::new("./tests/python/test.py");
-        let stats = process::process_file(path);
+        let python_rules = LanguageRules::for_python();
+        let stats = process::process_file(path, &python_rules);
 
         assert_eq!(stats.blank_lines, 3, "Blank lines count should be 3");
         assert_eq!(stats.comment_lines, 9, "Comment lines count should be 9");
